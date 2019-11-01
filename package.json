@@ -6,10 +6,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": {
+    "http-error-cli": "./bin/cli.js"
+  },
   "keywords": [
     "http",
     "error"
   ],
   "author": "bluesh55",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^4.17.15"
+  }
 }
