@@ -1,51 +1,44 @@
-const _ = require('lodash');
-const PresentationalError = require('./models/presentational-error');
+import _ from 'lodash';
+import PresentationalError = require('./models/presentational-error');
+import Mapping = require('./models/mapping');
+import RuntimeError = require('./runtime-error');
 
 class App {
-  constructor({
-    presentationalErrors = [],
-    mappings = []
-  } = {}) {
+  constructor(private presentationalErrors: Array<PresentationalError> = [], private mappings: Array<Mapping> = []) {}
 
-    this.presentationalErrors = presentationalErrors;
-    this.mappings = mappings;
-  }
-
-  /*
-   * presentationalErrorName(string): Name of presentational error.
-   * options(object):
-   *  - code(number): The code that override original code of error.
-   *  - message(string): The message that override original message of error.
-   *  - status(number): The status that override original status of error.
-   *  - replaceRules(object): The replacement rules.
-   *    - key(string): The key of message template. For instance, the key of '${fruit}' is 'fruit' .
-   *    - value(string): Replaced text.
-   */
-  generate(presentationalErrorName, options = {}) {
+  generate(
+    presentationalErrorName: string,
+    options: {
+      code?: number;
+      message?: string;
+      status?: number;
+      replaceRules?: Array<{ key: string, value: string }>;
+    } = {}
+  ): PresentationalError | undefined {
     const replaceRules = options.replaceRules || [];
     const presentationalError = this._findAndClonePresentationalErrorByName(presentationalErrorName);
     if (!presentationalError) {
-      return null;
+      return undefined;
     }
 
-    presentationalError.override({
-      code: options.code,
-      message: options.message,
-      status: options.status
-    });
+    presentationalError.override(
+      options.code,
+      options.message,
+      options.status
+    );
 
     presentationalError.replaceMessage(replaceRules);
 
     return presentationalError;
   }
 
-  map(error) {
+  map(error: RuntimeError): PresentationalError | undefined {
     const mapping = this._findMappingByErrorClassName(error.constructor.name);
     if (!mapping) {
-      return null;
+      return undefined;
     }
 
-    let mappedPresentationalError = null;
+    let mappedPresentationalError = undefined;
 
     // condition
     if (mapping.conditionExpressions && mapping.conditionExpressions.constructor === Array) {
@@ -60,7 +53,7 @@ class App {
       }
 
       if (mappedPresentationalError) {
-        mappedPresentationalError.replaceMessage(matchedCondition.replaceRules, error);
+        mappedPresentationalError.replaceMessage(matchedCondition!.replaceRules, error);
       }
     }
 
@@ -77,7 +70,7 @@ class App {
     return mappedPresentationalError;
   }
 
-  _findAndClonePresentationalErrorByName(errorName) {
+  _findAndClonePresentationalErrorByName(errorName: string): PresentationalError | undefined {
     let found = this.presentationalErrors.find((error) => {
       return error.errorName === errorName
     });
@@ -89,11 +82,11 @@ class App {
     return found;
   }
 
-  _findMappingByErrorClassName(errorClassName) {
+  _findMappingByErrorClassName(errorClassName: string): Mapping | undefined {
     return this.mappings.find((mapping) => {
       return mapping.errorClassName === errorClassName
     });
   }
 }
 
-module.exports = App;
+export = App;

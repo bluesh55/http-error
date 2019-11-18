@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const initCommand = require('../src/cli/init');
+const initCommand = require('../dist/cli/init');
 
 function help() {
   console.log('Usage: http-error-cli [command]\n');
